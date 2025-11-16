@@ -21,3 +21,5 @@ python manage.py startapp reportes
 python manage.py startapp auditoria
 python manage.py startapp notificaciones
 
+SUPER USER: paula
+pd: 1234
