@@ -1,0 +1,46 @@
+# Entorno virtual
+venv/
+ENV/
+env/
+
+# Django
+__pycache__/
+*.py[cod]
+*.sqlite3
+*/migrations/__pycache__/
+*/migrations/*.py
+
+# Archivos de entorno / claves
+.env
+*.env
+
+# Archivos temporales
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.tmp
+*.bak
+*.swp
+
+# VSCode
+.vscode/
+.code-workspace
+
+# Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Byte-compiled
+*.pyc
+*.pyo
+*.pyd
+
+# Local settings
+local_settings.py
+
+# Archivos generados por el servidor
+staticfiles/
+media/

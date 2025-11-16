@@ -1,0 +1,23 @@
+py -3.12 -m venv venv
+venv\Scripts\activate
+
+python.exe -m pip install --upgrade pip
+pip install django psycopg2-binary djangorestframework paho-mqtt python-dotenv
+
+django-admin startproject planta_san_miguel .
+python manage.py startapp core
+python manage.py startapp cuentas
+python manage.py startapp productos
+python manage.py startapp clientes
+python manage.py startapp inventario
+python manage.py startapp proveedores
+python manage.py startapp compras
+python manage.py startapp ventas
+python manage.py startapp planta
+python manage.py startapp produccion
+python manage.py startapp sensores
+python manage.py startapp logistica
+python manage.py startapp reportes
+python manage.py startapp auditoria
+python manage.py startapp notificaciones
+
