@@ -23,3 +23,5 @@ python manage.py startapp notificaciones
 
 SUPER USER: paula
 pd: 1234
+
+python manage.py shell <--- comando para entrar en el shell para hacer pruebas

@@ -1,8 +1,23 @@
+# ---------------------------------------------------------
+# AUTORES: Paula Ortiz, Benjamin Nuñez, Khrismery Gallardo
+# FECHA DE CREACIÓN: 01-10-2025
+# LICENCIA: Uso Educacional-No Comercial
+# PROPÓSITO: Modelos base para la aplicación Django
+# FECHA ÚLTIMA MODIFICACIÓN: 17-11-2025
+# ---------------------------------------------------------
+
 from django.db import models
 from django.core.exceptions import ValidationError
 
+# Utilidades de RUT centralizadas
+from core.utils.rut import (
+    calcular_dv,
+    formatear_rut_sin_puntos,
+    formatear_rut_con_puntos,
+)
+
 # ───────────────────────────────────────────────
-#   Modelo base 1: trae timestamps automáticos
+#   Modelo base 1: timestamps automáticos
 # ───────────────────────────────────────────────
 class TimeStampedModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
@@ -22,12 +37,12 @@ class BaseModel(TimeStampedModel):
         abstract = True
 
     def desactivar(self):
-        """Desactiva la entidad sin borrarla físicamente."""
+        """Desactiva la entidad (soft delete)."""
         self.activo = False
         self.save()
 
     def activar(self):
-        """Activa nuevamente la entidad."""
+        """Activa la entidad nuevamente."""
         self.activo = True
         self.save()
 
@@ -42,53 +57,40 @@ class EntidadConRut(BaseModel):
     )
     rut_dv = models.CharField(
         max_length=1,
-        help_text="Dígito verificador (0-9 o K)"
+        help_text="Dígito verificador calculado automáticamente",
+        editable=False,
     )
 
     class Meta:
         abstract = True
         verbose_name = "Entidad con RUT"
 
-    # ───────────────────────────────────────────────
-    #   Método de dominio: calcular DV oficial
-    # ───────────────────────────────────────────────
-    @staticmethod
-    def calcular_dv(rut_numero: int) -> str:
-        """
-        Calcula el dígito verificador según el algoritmo oficial.
-        """
-        reversed_digits = map(int, reversed(str(rut_numero)))
-        factors = [2, 3, 4, 5, 6, 7]
-        s = 0
-        for i, d in enumerate(reversed_digits):
-            s += d * factors[i % 6]
-        dv = 11 - (s % 11)
-        if dv == 11:
-            return "0"
-        if dv == 10:
-            return "K"
-        return str(dv)
-
-    # ───────────────────────────────────────────────
-    #   Validación automática del RUT
-    # ───────────────────────────────────────────────
     def clean(self):
-        dv_calculado = self.calcular_dv(self.rut_numero)
-        if dv_calculado.upper() != self.rut_dv.upper():
-            raise ValidationError(
-                {
-                    "rut_dv": f"DV incorrecto. Debería ser {dv_calculado}"
-                }
-            )
+        """
+        Calcula SIEMPRE el DV en base a rut_numero.
+        Sobrescribe el DV previo para asegurar consistencia.
+        """
+        super().clean()
+        if self.rut_numero:
+            self.rut_dv = calcular_dv(self.rut_numero)
 
-    # ───────────────────────────────────────────────
-    #   Representación amigable
-    # ───────────────────────────────────────────────
+    # ──────────────────────────────
+    #   Representaciones de RUT
+    # ──────────────────────────────
+    @property
+    def rut_sin_puntos(self) -> str:
+        """Ej: 12345678-5"""
+        return formatear_rut_sin_puntos(self.rut_numero, self.rut_dv)
+
+    @property
+    def rut_con_puntos(self) -> str:
+        """Ej: 12.345.678-5"""
+        return formatear_rut_con_puntos(self.rut_numero, self.rut_dv)
+
     def rut_completo(self) -> str:
-        """
-        Devuelve el RUT formateado sin puntos: 12345678-9
-        """
-        return f"{self.rut_numero}-{self.rut_dv.upper()}"
+        """Alias para rut_sin_puntos (compatibilidad con admin)."""
+        return self.rut_sin_puntos
 
     def __str__(self):
-        return self.rut_completo()
+        # Para logs y admin, sin puntos es más claro
+        return self.rut_sin_puntos
